@@ -6,8 +6,6 @@ The Azure CLI is a command-line tool that you can use to manage your Azure resou
 
 Watch full video on [YouTube](https://youtu.be/y9LcRGU6xX4)
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/y9LcRGU6xX4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
 ## Azure CLI OS Compatibility
 
 The Azure CLI is available for Windows, Mac, and Linux. You can also use the Azure Cloud Shell, which is a browser-based shell that you can use to manage your Azure resources. For our demos, I will be using the Azure CLI on my Windows Machine, but the same principles apply to the other operating systems either you're on Mac, Linux, Windows or the Azure Cloud Shell.
