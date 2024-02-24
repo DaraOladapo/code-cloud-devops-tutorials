@@ -13,23 +13,24 @@
 # you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
-title: Code, Cloud and DevOps Tutorials
+title: Code Cloud and DevOps Tutorials
 email: ccd-tutorials@daraoladapo.com
 description: >- # this means to ignore newlines until "baseurl:"
-  This repo will house all tutorials I make on Code, Cloud and DevOps. I hope you find them useful.
+  Here you will find all the tutorials I make on Code, Cloud and DevOps. The corressponding videos are also available on my YouTube channel. I hope you find them useful.
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://daraoladapo.com"
+# logo: "https://prying.io/assets/prying_logo.png"
+# image: "https://prying.io/assets/prying_logo.png"
 twitter_username: daraoladapo
 github_username:  daraoladapo
-
-feed:
-  posts_limit: 1000
+google_analytics: 370656881
 
 # Build settings
 markdown: kramdown
 theme: minima
 plugins:
   - jekyll-feed
+  - jekyll-sitemap
 
 # Exclude from processing.
 # The following items will not be processed, by default. Create a custom list
@@ -42,6 +43,3 @@ plugins:
 #   - vendor/cache/
 #   - vendor/gems/
 #   - vendor/ruby/
-
-
-permalink: /:slug

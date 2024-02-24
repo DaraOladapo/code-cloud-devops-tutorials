@@ -1,0 +1,22 @@
+
+<!DOCTYPE html>
+<html lang="{{ page.lang | default: site.lang | default: "en" }}">
+
+  {%- include head.html -%}
+
+  <body>
+
+    {%- include header.html -%}
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        {{ content }}
+        <!-- <iframe src="https://david-kerr.youcanbook.me/?noframe=true&skipHeaderFooter=true" id="ycbmiframedavid-kerr" style="width:100%;height:1000px;border:0px;background-color:transparent;" frameborder="0" allowtransparency="true"></iframe><script>window.addEventListener && window.addEventListener("message", function(event){if (event.origin === "https://david-kerr.youcanbook.me"){document.getElementById("ycbmiframedavid-kerr").style.height = event.data + "px";}}, false);</script> -->
+      </div>
+    </main>
+
+    {%- include footer.html -%}
+
+  </body>
+
+</html>

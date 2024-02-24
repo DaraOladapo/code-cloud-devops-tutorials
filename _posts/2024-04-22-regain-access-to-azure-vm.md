@@ -1,16 +1,8 @@
 ---
-
+layout: post
 title: How to reset the password of an Azure VM
-date: 2024-04-22
-tags: [Azure, VM, Password, Reset]
-categories:
-    - Azure
-    - VM
-    - Password
-    - Reset
-
-slug: regain-access-to-azure-vm
-
+date: 2024-04-22 15:00:00 0000
+categories: cloud
 ---
 
 # How to reset the password of an Azure VM
