@@ -1,3 +1,19 @@
+---
+
+title: "How to use the Azure CLI"
+date: 2024-04-22
+categories:
+  - Azure
+  - CLI
+  - DevOps
+  - Cloud
+  - Code
+  - Tutorial
+
+slug: using-the-azure-cli
+
+---
+
 # How to use the Azure CLI
 
 ## Introduction
