@@ -2,13 +2,11 @@
 
 ## Introduction
 
-The Azure CLI is a command-line tool that you can use to manage your Azure resources. We'll be learning how to use the Azure CLI to create and manage resources in Azure in this tutorial. Let's get started.
-
-Watch full video on [YouTube](https://youtu.be/y9LcRGU6xX4)
+The Azure CLI is a command-line tool that you can use to manage your Azure resources. We'll be learning how to use the Azure CLI to create and manage resources in Azure in this tutorial. Let's get started. Watch the full video on [YouTube](https://youtu.be/y9LcRGU6xX4)
 
 ## Azure CLI OS Compatibility
 
-The Azure CLI is available for Windows, Mac, and Linux. You can also use the Azure Cloud Shell, which is a browser-based shell that you can use to manage your Azure resources. For our demos, I will be using the Azure CLI on my Windows Machine, but the same principles apply to the other operating systems either you're on Mac, Linux, Windows or the Azure Cloud Shell.
+The Azure CLI is available for Windows, Mac, and Linux. You can also use the Azure Cloud Shell, which is a browser-based shell that you can use to manage your Azure resources. For our demos, I will be using the Azure CLI on my Windows Machine, but the same principles apply to the other operating systems whether you're on Mac, Linux, Windows or the Azure Cloud Shell.
 
 ## Install the Azure CLI
 
@@ -16,7 +14,7 @@ To install the Azure CLI, I'm not going to make you cram a website, just go on y
 
 ## Login to the Azure CLI
 
-Azure CLI can be used with any CLI installed on your computer - PowerShell, Bash and the rest of the bunch. I will be using PowerShell in this video. PowerShell is a cross-platform task automation and configuration management framework, consisting of a command-line shell and scripting language. PowerShell is built on top of the .NET Common Language Runtime (CLR) and the .NET Framework, and accepts and returns .NET Framework objects. PowerShell is a task-based command-line shell and scripting language; it is designed specifically for system administrators and power-users, to rapidly automate the administration of multiple operating systems (Linux, macOS, Unix, and Windows) and the processes related to the applications that run on those operating systems.
+Azure CLI can be used with any CLI installed on your computer - PowerShell, Bash and the rest of the bunch. I will be using PowerShell in this video. PowerShell is a cross-platform task automation and configuration management framework, consisting of a command-line shell and scripting language. PowerShell is built on top of the .NET Common Language Runtime (CLR) and the .NET Framework and accepts and returns .NET Framework objects. PowerShell is a task-based command-line shell and scripting language; it is designed specifically for system administrators and power users, to rapidly automate the administration of multiple operating systems (Linux, macOS, Unix, and Windows) and the processes related to the applications that run on those operating systems.
 
 To login to the Azure CLI, open your PowerShell and type in the following command:
 
@@ -24,7 +22,7 @@ To login to the Azure CLI, open your PowerShell and type in the following comman
 az login
 ```
 
-This will open a browser window and ask you to login to your Azure account. Once you've logged in, you can close the browser window and go back to your PowerShell. You should see a message on the browser that says you've logged in successfully.
+This will open a browser window and ask you to log in to your Azure account. Once you've logged in, you can close the browser window and go back to your PowerShell. You should see a message on the browser that says you've logged in successfully.
 
 You should then see a list of your subscriptions. If you have more than one subscription, you can select the subscription you want to use by typing in the following command:
 
