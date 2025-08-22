@@ -8,8 +8,10 @@ The tutorials in this repository are designed to help you learn and apply best p
 
 ## Tutorials List
 
+
 | Tutorial | Description | Complexity | Video Tutorial |
 |---|---|---|---|
+| [Azure Storage Options](./azure-storage-options/README.md) | Learn how to use Azure Blob, Table, Queue, and File Storage in C# with practical code samples and step-by-step instructions. | Beginner/Intermediate | [Watch here](https://youtu.be/6Tg_cGBzGw8) |
 
 
 ## Tutorial Request
