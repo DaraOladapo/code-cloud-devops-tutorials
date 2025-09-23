@@ -20,18 +20,18 @@ This C# console project demonstrates how to use the main Azure Storage services:
   - Azure.Storage.Queues
   - Azure.Storage.Files.Shares
 
-
 ## How to Run
 
-1. Set the following environment variables with your Azure Storage details:
-  - `AZURE_STORAGE_CONNECTION_STRING`: Your Azure Storage account connection string
-  - `AZURE_BLOB_CONTAINER`: Blob container name (default: `sample-container`)
-  - `AZURE_TABLE_NAME`: Table name (default: `SampleTable`)
-  - `AZURE_QUEUE_NAME`: Queue name (default: `sample-queue`)
-  - `AZURE_FILE_SHARE`: File share name (default: `sample-share`)
-  - `SAMPLE_FILE_PATH`: Path to a local file to upload
+Set the following environment variables with your Azure Storage details:
 
-2. Build and run the project:
+- `AZURE_STORAGE_CONNECTION_STRING`: Your Azure Storage account connection string
+- `AZURE_BLOB_CONTAINER`: Blob container name (default: `sample-container`)
+- `AZURE_TABLE_NAME`: Table name (default: `SampleTable`)
+- `AZURE_QUEUE_NAME`: Queue name (default: `sample-queue`)
+- `AZURE_FILE_SHARE`: File share name (default: `sample-share`)
+- `SAMPLE_FILE_PATH`: Path to a local file to upload
+
+Build and run the project:
 
   ```pwsh
   dotnet run
