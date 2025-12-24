@@ -1,0 +1,46 @@
+# Example terraform.tfvars for ToDo App infrastructure
+# Copy this file to terraform.tfvars and update with your own values
+# DO NOT commit terraform.tfvars to version control
+
+# Resource Group Configuration
+resource_group_name = "your-resource-group-name"  # e.g., "my-todo-app-rg"
+location            = "UK South"                  # e.g., "UK South", "East US", "West Europe"
+
+# Tags for all resources
+tags = {
+  environment = "dev"          # dev, staging, prod
+  project     = "todo-app"
+  managed-by  = "terraform"
+}
+
+# Managed Identity
+managed_identity_name = "your-todo-identity"      # e.g., "my-todo-identity"
+
+# Key Vault Configuration
+# IMPORTANT: Must be globally unique, 3-24 chars, alphanumeric and hyphens only
+key_vault_name = "your-unique-keyvault"           # e.g., "my-todo-kv-12345"
+
+# SQL Server Configuration
+# IMPORTANT: Must be globally unique, lowercase, alphanumeric and hyphens only
+sql_server_name = "your-unique-sql-server"        # e.g., "my-todo-sql-12345"
+sql_db_name     = "TodoDatabase"
+sql_sku_name    = "Basic"                         # Basic, S0, S1, P1, etc.
+
+# App Service Configuration
+app_service_plan_name = "your-app-service-plan"   # e.g., "my-todo-asp"
+
+# IMPORTANT: Must be globally unique
+web_app_name = "your-unique-webapp"               # e.g., "my-todo-app-12345"
+
+# App Service SKU options:
+# - F1 (Free tier - limited, no custom domains)
+# - B1 (Basic - $13/month, custom domains, SSL)
+# - S1 (Standard - $69/month, autoscale, slots)
+# - P1V2 (Premium - $146/month, advanced features)
+app_service_sku = "B1"
+
+# .NET Runtime Version
+dotnet_version = "8.0"
+
+# Application Insights
+app_insights_name = "your-app-insights"           # e.g., "my-todo-ai"

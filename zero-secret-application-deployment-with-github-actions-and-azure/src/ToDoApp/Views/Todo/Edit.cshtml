@@ -1,0 +1,109 @@
+@model ToDoApp.Models.EditTodoItemViewModel
+
+@{
+    ViewData["Title"] = "Edit Task";
+}
+
+<div class="main-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1><i class="bi bi-pencil-square"></i> Edit Task</h1>
+        <p>Update your task details</p>
+    </div>
+
+    <div class="stats-card">
+        <form asp-action="Edit" method="post">
+            <input asp-for="Id" type="hidden" />
+            <input asp-for="CreatedAt" type="hidden" />
+            <input asp-for="CompletedAt" type="hidden" />
+            
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label asp-for="Title" class="form-label"></label>
+                    <input asp-for="Title" class="form-control" placeholder="Enter task title..." />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+                
+                <div class="col-md-4">
+                    <label asp-for="Priority" class="form-label"></label>
+                    <select asp-for="Priority" class="form-select">
+                        @foreach (var option in CreateTodoItemViewModel.GetPriorityOptions())
+                        {
+                            <option value="@option.Value" selected="@(Model.Priority.ToString() == option.Value)">@option.Text</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Priority" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+                <div class="col-md-6">
+                    <label asp-for="Category" class="form-label"></label>
+                    <select asp-for="Category" class="form-select">
+                        @foreach (var option in CreateTodoItemViewModel.GetCategoryOptions())
+                        {
+                            <option value="@option.Value" selected="@(Model.Category == option.Value)">@option.Text</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Category" class="text-danger"></span>
+                </div>
+                
+                <div class="col-md-6">
+                    <label asp-for="DueDate" class="form-label"></label>
+                    <input asp-for="DueDate" class="form-control" type="datetime-local" />
+                    <span asp-validation-for="DueDate" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="4" 
+                          placeholder="Enter task description (optional)..."></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="mt-3">
+                <div class="form-check">
+                    <input asp-for="IsComplete" class="form-check-input" type="checkbox" />
+                    <label asp-for="IsComplete" class="form-check-label"></label>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <i class="bi bi-calendar-plus"></i> Created: @Model.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")
+                        </small>
+                    </div>
+                    @if (Model.IsComplete && Model.CompletedAt.HasValue)
+                    {
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="bi bi-check-circle"></i> Completed: @Model.CompletedAt.Value.ToString("MMM dd, yyyy 'at' h:mm tt")
+                            </small>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check"></i> Update Task
+                </button>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                    <i class="bi bi-eye"></i> View Details
+                </a>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
