@@ -11,7 +11,7 @@ The tutorials in this repository are designed to help you learn and apply best p
 | Tutorial | Description | Complexity | Video Tutorial |
 |---|---|---|---|
 | [Azure Storage Options](./azure-storage-options/README.md) | Learn how to use Azure Blob, Table, Queue, and File Storage in C# with practical code samples and step-by-step instructions. | Beginner/Intermediate | [Watch here](https://youtu.be/6Tg_cGBzGw8) |
-| [Todo App with GitHub Actions](./todo-app-with-github-actions/readme.md) | Deploy a To-Do App to Azure using GitHub Actions. | Intermediate | - |
+| [Zero-Secret Application Deployment](./zero-secret-application-deployment-with-github-actions-and-azure/readme.md) | Deploy a .NET 8.0 ToDo application to Azure using passwordless authentication with GitHub Actions OIDC, Managed Identity, and Terraform. | Intermediate/Advanced | Coming soon |
 
 ## Tutorial Request
 
