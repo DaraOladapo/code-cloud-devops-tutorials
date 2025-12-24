@@ -1,0 +1,467 @@
+@model ToDoApp.Models.TodoListViewModel
+
+@{
+    ViewData["Title"] = "Modern Todo List";
+}
+
+<div class="main-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1><i class="bi bi-check2-square"></i> Modern Todo App</h1>
+        <p>Stay organized, stay productive</p>
+    </div>
+
+    <!-- Notifications -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2">
+            <div class="stats-card text-center">
+                <div class="stat-number total">@Model.TotalTasks</div>
+                <div class="stat-label">TOTAL TASKS</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stats-card text-center">
+                <div class="stat-number pending">@Model.PendingTasks</div>
+                <div class="stat-label">PENDING</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stats-card text-center">
+                <div class="stat-number completed">@Model.CompletedTasks</div>
+                <div class="stat-label">COMPLETED</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stats-card text-center">
+                <div class="stat-number overdue">@Model.OverdueTasks</div>
+                <div class="stat-label">OVERDUE</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card">
+                <div class="text-center mb-2">
+                    <div class="stat-label">PROGRESS</div>
+                </div>
+                <div class="progress" style="height: 12px;">
+                    <div class="progress-bar @(Model.CompletionRate >= 80 ? "bg-success" : Model.CompletionRate >= 50 ? "bg-info" : Model.CompletionRate >= 25 ? "bg-warning" : "bg-danger")" 
+                         role="progressbar" 
+                         style="width: @Model.CompletionRate%" 
+                         aria-valuenow="@Model.CompletionRate" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                         <span class="progress-text">@Model.CompletionRate%</span>
+                    </div>
+                </div>
+                <small class="text-muted mt-1 d-block">
+                    @Model.CompletedTasks of @Model.TotalTasks tasks completed
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="stats-card mb-4">
+        <h5 class="mb-3"><i class="bi bi-funnel"></i> Filter & Search</h5>
+        <form method="get">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="searchTerm" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="searchTerm" name="searchTerm" 
+                           value="@Model.SearchTerm" placeholder="Search tasks...">
+                </div>
+                <div class="col-md-3">
+                    <label for="filterCategory" class="form-label">Category</label>
+                    <select class="form-select" id="filterCategory" name="filterCategory">
+                        <option value="">All Categories</option>
+                        @foreach (var category in Model.GetCategories())
+                        {
+                            <option value="@category" selected="@(Model.FilterCategory == category)">@category</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="filterPriority" class="form-label">Priority</label>
+                    <select class="form-select" id="filterPriority" name="filterPriority">
+                        @foreach (var option in TodoListViewModel.GetPriorityFilterOptions())
+                        {
+                            <option value="@option.Value" selected="@(Model.FilterPriority.ToString() == option.Value)">@option.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="filterCompleted" class="form-label">Status</label>
+                    <select class="form-select" id="filterCompleted" name="filterCompleted">
+                        @foreach (var option in TodoListViewModel.GetCompletedFilterOptions())
+                        {
+                            <option value="@option.Value" selected="@(Model.FilterCompleted.ToString() == option.Value)">@option.Text</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search"></i> Apply Filters
+                    </button>
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                        <i class="bi bi-x"></i> Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Quick Add Task -->
+    <div class="quick-add-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Quick Add Task</h5>
+            <div class="d-flex gap-2">
+                <button type="button" id="toggleCompleted" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-eye-slash"></i> Hide Completed Tasks
+                </button>
+                <a href="@Url.Action("Create")" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-pencil"></i> Advanced Add
+                </a>
+            </div>
+        </div>
+        <form asp-action="Add" method="post" class="quick-add-form">
+            <div class="row g-2">
+                <div class="col-md-8">
+                    <input name="title" class="form-control" 
+                           placeholder="What needs to be done today?" 
+                           required maxlength="200" 
+                           autocomplete="off" />
+                </div>
+                <div class="col-md-2">
+                    <select name="category" class="form-select">
+                        <option value="">Category</option>
+                        <option value="Work">Work</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Health">Health</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Education">Education</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-plus"></i> Add
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="bulk-action-container" style="display: none;">
+        <div class="stats-card mb-3">
+            <form asp-action="BulkAction" method="post">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted">Selected: <span class="selected-count">0</span> tasks</span>
+                    <button type="submit" name="action" value="complete" class="btn btn-sm btn-success"
+                            onclick="return confirm('Mark selected tasks as complete?')">
+                        <i class="bi bi-check"></i> Mark Complete
+                    </button>
+                    <button type="submit" name="action" value="incomplete" class="btn btn-sm btn-warning"
+                            onclick="return confirm('Mark selected tasks as pending?')">
+                        <i class="bi bi-clock"></i> Mark Pending
+                    </button>
+                    <button type="submit" name="action" value="delete" class="btn btn-sm btn-danger"
+                            onclick="return confirm('Are you sure you want to delete the selected tasks?')">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                        <i class="bi bi-x"></i> Clear Selection
+                    </button>
+                </div>
+                <!-- Hidden inputs for selected IDs will be added by JavaScript -->
+            </form>
+        </div>
+    </div>
+
+    <!-- Task List -->
+    @{
+        var activeTasks = Model.TodoItems.Where(t => !t.IsComplete).ToList();
+        var completedTasks = Model.TodoItems.Where(t => t.IsComplete).ToList();
+    }
+    
+    @if (Model.TodoItems.Any())
+    {
+        <!-- Active Tasks Section -->
+        
+        @if (activeTasks.Any())
+        {
+            <div class="mb-4">
+                <h5 class="mb-3"><i class="bi bi-list-task"></i> Active Tasks (@activeTasks.Count)</h5>
+                @foreach (var item in activeTasks)
+                {
+                    <div class="task-card @(item.DueDate.HasValue && item.DueDate < DateTime.UtcNow ? "overdue" : "")">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <input type="checkbox" name="selectedIds" value="@item.Id" class="form-check-input me-3">
+                                    <h6 class="task-title mb-0">@item.Title</h6>
+                                </div>
+                                
+                                @if (!string.IsNullOrEmpty(item.Description))
+                                {
+                                    <p class="text-muted mb-2">@item.Description</p>
+                                }
+
+                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                    <span class="priority-badge priority-@item.Priority.ToString().ToLower()">
+                                        @item.Priority
+                                    </span>
+                                    
+                                    @if (!string.IsNullOrEmpty(item.Category))
+                                    {
+                                        <span class="badge bg-light text-dark">
+                                            <i class="bi bi-tag"></i> @item.Category
+                                        </span>
+                                    }
+                                    
+                                    @if (item.DueDate.HasValue)
+                                    {
+                                        <span class="badge @(item.DueDate < DateTime.UtcNow ? "bg-danger" : "bg-info")">
+                                            <i class="bi bi-calendar"></i> @item.DueDate.Value.ToString("MMM dd, yyyy")
+                                        </span>
+                                    }
+                                </div>
+
+                                <small class="text-muted">
+                                    Created: @item.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                </small>
+                            </div>
+
+                            <div class="d-flex gap-1 ms-3">
+                                <form asp-action="Complete" asp-route-id="@item.Id" method="post" style="display:inline">
+                                    <button type="submit" class="btn btn-action btn-complete ripple" 
+                                            title="Mark as complete">
+                                        <i class="bi bi-check"></i>
+                                    </button>
+                                </form>
+
+                                <a href="@Url.Action("Edit", new { id = item.Id })" class="btn btn-action btn-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+
+                                <a href="@Url.Action("Details", new { id = item.Id })" class="btn btn-action btn-info">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+
+                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline">
+                                    <button type="submit" class="btn btn-action btn-delete" 
+                                            onclick="return confirm('Are you sure you want to delete this task?')"
+                                            title="Delete task">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Completed Tasks Section -->
+        @if (completedTasks.Any())
+        {
+            <div id="completedTasksSection" class="mb-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-check-circle"></i> Completed Tasks (@completedTasks.Count)
+                    <small class="text-muted ms-2">- Click toggle above to show/hide</small>
+                </h5>
+                <div id="completedTasksList">
+                    @foreach (var item in completedTasks)
+                    {
+                        <div class="task-card completed-task">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <input type="checkbox" name="selectedIds" value="@item.Id" class="form-check-input me-3">
+                                        <h6 class="task-title mb-0 text-decoration-line-through">@item.Title</h6>
+                                    </div>
+                                    
+                                    @if (!string.IsNullOrEmpty(item.Description))
+                                    {
+                                        <p class="text-muted mb-2">@item.Description</p>
+                                    }
+
+                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                        <span class="priority-badge priority-@item.Priority.ToString().ToLower()">
+                                            @item.Priority
+                                        </span>
+                                        
+                                        @if (!string.IsNullOrEmpty(item.Category))
+                                        {
+                                            <span class="badge bg-light text-dark">
+                                                <i class="bi bi-tag"></i> @item.Category
+                                            </span>
+                                        }
+                                        
+                                        @if (item.DueDate.HasValue)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-calendar"></i> @item.DueDate.Value.ToString("MMM dd, yyyy")
+                                            </span>
+                                        }
+                                    </div>
+
+                                    <small class="text-muted">
+                                        Created: @item.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                        @if (item.CompletedAt.HasValue)
+                                        {
+                                            <span> • Completed: @item.CompletedAt.Value.ToString("MMM dd, yyyy 'at' h:mm tt")</span>
+                                        }
+                                    </small>
+                                </div>
+
+                                <div class="d-flex gap-1 ms-3">
+                                    <form asp-action="Complete" asp-route-id="@item.Id" method="post" style="display:inline">
+                                        <button type="submit" class="btn btn-action btn-complete ripple" 
+                                                title="Mark as pending">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                    </form>
+
+                                    <a href="@Url.Action("Edit", new { id = item.Id })" class="btn btn-action btn-warning">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+
+                                    <a href="@Url.Action("Details", new { id = item.Id })" class="btn btn-action btn-info">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+
+                                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline">
+                                        <button type="submit" class="btn btn-action btn-delete" 
+                                                onclick="return confirm('Are you sure you want to delete this task?')"
+                                                title="Delete task">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h4 class="text-muted mt-3">No tasks found</h4>
+            <p class="text-muted">Create your first task to get started!</p>
+            <a href="@Url.Action("Create")" class="btn btn-primary">
+                <i class="bi bi-plus"></i> Create Task
+            </a>
+        </div>
+    }
+</div>
+
+<!-- Footer -->
+<footer class="text-center mt-5 py-3">
+    <p class="text-muted mb-0">
+        <i class="bi bi-heart-fill text-danger"></i> Built with ASP.NET Core & Bootstrap 
+        <i class="bi bi-github"></i> Deployed with GitHub Actions to Azure
+    </p>
+</footer>
+
+@section Scripts {
+    <script>
+        // Toggle completed tasks visibility
+        function toggleCompletedTasks() {
+            const completedSection = document.getElementById('completedTasksSection');
+            const toggleBtn = document.getElementById('toggleCompleted');
+            const icon = toggleBtn.querySelector('i');
+            
+            if (completedSection.style.display === 'none') {
+                completedSection.style.display = 'block';
+                toggleBtn.innerHTML = '<i class="bi bi-eye-slash"></i> Hide Completed Tasks';
+            } else {
+                completedSection.style.display = 'none';
+                toggleBtn.innerHTML = '<i class="bi bi-eye"></i> Show Completed Tasks';
+            }
+        }
+
+        // Update bulk action buttons visibility and count
+        function updateBulkActionButtons() {
+            const checkboxes = document.querySelectorAll('input[name="selectedIds"]:checked');
+            const bulkContainer = document.querySelector('.bulk-action-container');
+            const countDisplay = document.querySelector('.selected-count');
+            
+            if (checkboxes.length > 0) {
+                bulkContainer.style.display = 'block';
+                countDisplay.textContent = checkboxes.length;
+            } else {
+                bulkContainer.style.display = 'none';
+                countDisplay.textContent = '0';
+            }
+        }
+
+        // Clear selection function
+        function clearSelection() {
+            document.querySelectorAll('input[name="selectedIds"]:checked').forEach(cb => cb.checked = false);
+            updateBulkActionButtons();
+        }
+
+        // Add event listeners when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add toggle button event listener
+            document.getElementById('toggleCompleted').addEventListener('click', toggleCompletedTasks);
+
+            // Add change event to all checkboxes
+            document.querySelectorAll('input[name="selectedIds"]').forEach(checkbox => {
+                checkbox.addEventListener('change', updateBulkActionButtons);
+            });
+
+            // Intercept bulk action form submission to add selected IDs
+            const bulkActionForm = document.querySelector('form[action*="BulkAction"]');
+            if (bulkActionForm) {
+                bulkActionForm.addEventListener('submit', function(e) {
+                    const selectedIds = Array.from(document.querySelectorAll('input[name="selectedIds"]:checked'))
+                        .map(cb => cb.value);
+                    
+                    if (selectedIds.length === 0) {
+                        e.preventDefault();
+                        alert('Please select at least one task.');
+                        return false;
+                    }
+
+                    // Remove any existing selectedIds hidden inputs
+                    this.querySelectorAll('input[name="selectedIds"][type="hidden"]').forEach(input => input.remove());
+
+                    // Add selected IDs as hidden inputs
+                    selectedIds.forEach(id => {
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = 'selectedIds';
+                        hiddenInput.value = id;
+                        this.appendChild(hiddenInput);
+                    });
+                });
+            }
+
+            // Initial update
+            updateBulkActionButtons();
+        });
+    </script>
+}

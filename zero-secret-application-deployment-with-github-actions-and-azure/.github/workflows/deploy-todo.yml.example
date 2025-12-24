@@ -1,0 +1,264 @@
+name: Build and Deploy ToDo App to Azure Web App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+# Required for OIDC authentication to Azure
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  DOTNET_VERSION: '8.x'
+  TERRAFORM_VERSION: '1.5.0'
+  
+  # TODO: Update these values for your Terraform backend
+  TF_STATE_STORAGE_ACCOUNT: 'your-tfstate-storage'     # Must be globally unique, lowercase, alphanumeric
+  TF_STATE_CONTAINER: 'terraform'
+  TF_STATE_RESOURCE_GROUP: 'your-tfstate-rg'
+  TF_STATE_LOCATION: 'uksouth'                         # e.g., uksouth, eastus, westeurope
+  TF_STATE_SUBSCRIPTION_ID: 'your-subscription-id'     # Your Azure subscription ID
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore ./src/ToDoApp/ToDoApp.csproj
+
+    - name: Build
+      run: dotnet build ./src/ToDoApp/ToDoApp.csproj --no-restore --configuration Release
+
+    # Uncomment when you have tests
+    # - name: Test
+    #   run: dotnet test ./src/ToDoApp/ToDoApp.csproj --no-build --configuration Release --verbosity normal
+
+    - name: Publish
+      run: dotnet publish ./src/ToDoApp/ToDoApp.csproj --no-build --configuration Release --output ./src/ToDoApp/publish
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: webapp
+        path: ./src/ToDoApp/publish
+
+  infrastructure:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      web_app_name: ${{ steps.tf_outputs.outputs.web_app_name }}
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      ARM_USE_OIDC: true
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
+    
+    - name: Azure Login (OIDC)
+      uses: azure/login@v2
+      with:
+        client-id: ${{ vars.AZURE_CLIENT_ID }}
+        tenant-id: ${{ vars.AZURE_TENANT_ID }}
+        subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+    
+    - name: Create Terraform Backend Storage
+      run: |
+        echo "🔍 Checking backend storage infrastructure..."
+        
+        # Set subscription context
+        az account set --subscription ${{ env.TF_STATE_SUBSCRIPTION_ID }}
+        
+        # Check if resource group exists
+        if az group show --name ${{ env.TF_STATE_RESOURCE_GROUP }} &>/dev/null; then
+          echo "✓ Resource group exists: ${{ env.TF_STATE_RESOURCE_GROUP }}"
+        else
+          echo "📦 Creating resource group: ${{ env.TF_STATE_RESOURCE_GROUP }}"
+          az group create \
+            --name ${{ env.TF_STATE_RESOURCE_GROUP }} \
+            --location ${{ env.TF_STATE_LOCATION }} \
+            --output none
+        fi
+        
+        # Check if storage account exists
+        if az storage account show \
+          --name ${{ env.TF_STATE_STORAGE_ACCOUNT }} \
+          --resource-group ${{ env.TF_STATE_RESOURCE_GROUP }} &>/dev/null; then
+          echo "✓ Storage account exists: ${{ env.TF_STATE_STORAGE_ACCOUNT }}"
+        else
+          echo "💾 Creating storage account: ${{ env.TF_STATE_STORAGE_ACCOUNT }}"
+          az storage account create \
+            --name ${{ env.TF_STATE_STORAGE_ACCOUNT }} \
+            --resource-group ${{ env.TF_STATE_RESOURCE_GROUP }} \
+            --location ${{ env.TF_STATE_LOCATION }} \
+            --sku Standard_LRS \
+            --kind StorageV2 \
+            --encryption-services blob \
+            --https-only true \
+            --min-tls-version TLS1_2 \
+            --allow-blob-public-access false \
+            --output none
+        fi
+        
+        # Get storage account key
+        STORAGE_KEY=$(az storage account keys list \
+          --resource-group ${{ env.TF_STATE_RESOURCE_GROUP }} \
+          --account-name ${{ env.TF_STATE_STORAGE_ACCOUNT }} \
+          --query '[0].value' -o tsv)
+        
+        # Check if container exists
+        if az storage container exists \
+          --name ${{ env.TF_STATE_CONTAINER }} \
+          --account-name ${{ env.TF_STATE_STORAGE_ACCOUNT }} \
+          --account-key "$STORAGE_KEY" \
+          --query exists -o tsv | grep -q true; then
+          echo "✓ Container exists: ${{ env.TF_STATE_CONTAINER }}"
+        else
+          echo "📁 Creating container: ${{ env.TF_STATE_CONTAINER }}"
+          az storage container create \
+            --name ${{ env.TF_STATE_CONTAINER }} \
+            --account-name ${{ env.TF_STATE_STORAGE_ACCOUNT }} \
+            --account-key "$STORAGE_KEY" \
+            --public-access off \
+            --output none
+        fi
+        
+        # Enable versioning (safe to run multiple times)
+        echo "🔒 Ensuring blob versioning is enabled..."
+        az storage account blob-service-properties update \
+          --account-name ${{ env.TF_STATE_STORAGE_ACCOUNT }} \
+          --resource-group ${{ env.TF_STATE_RESOURCE_GROUP }} \
+          --enable-versioning true \
+          --output none
+        
+        echo "✅ Backend storage configured successfully"
+    
+    - name: Terraform Init
+      run: terraform init
+      working-directory: ./azure
+    
+    - name: Terraform Validate
+      run: terraform validate
+      working-directory: ./azure
+    
+    - name: Terraform Plan
+      run: terraform plan -var-file="terraform.tfvars" -out=tfplan
+      working-directory: ./azure
+    
+    - name: Terraform Apply
+      run: terraform apply -auto-approve tfplan
+      working-directory: ./azure
+    
+    - name: Get Terraform Outputs
+      id: tf_outputs
+      run: |
+        echo "sql_server_name=$(terraform output -raw sql_server_name)" >> $GITHUB_OUTPUT
+        echo "sql_database_name=$(terraform output -raw sql_database_name)" >> $GITHUB_OUTPUT
+        echo "managed_identity_name=$(terraform output -raw managed_identity_name)" >> $GITHUB_OUTPUT
+        echo "resource_group_name=$(terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
+        echo "web_app_name=$(terraform output -raw web_app_name)" >> $GITHUB_OUTPUT
+      working-directory: ./azure
+    
+    - name: Enable Azure Services Access to SQL Server
+      run: |
+        echo "🔓 Enabling Azure services access to SQL Server..."
+        az sql server firewall-rule create \
+          --resource-group "${{ steps.tf_outputs.outputs.resource_group_name }}" \
+          --server "${{ steps.tf_outputs.outputs.sql_server_name }}" \
+          --name "AllowAzureServices" \
+          --start-ip-address 0.0.0.0 \
+          --end-ip-address 0.0.0.0 \
+          || echo "Firewall rule already exists"
+        
+        echo "✅ Firewall configured"
+    
+    - name: Grant Directory Reader to SQL Server Identity
+      continue-on-error: true
+      run: |
+        echo "🔐 Attempting to grant Directory Reader role to SQL Server managed identity..."
+        
+        # Check if output exists
+        if terraform output sql_server_identity_principal_id &>/dev/null; then
+          SQL_SERVER_IDENTITY_ID=$(terraform output -raw sql_server_identity_principal_id)
+          TENANT_ID=$(terraform output -raw tenant_id)
+          
+          echo "SQL Server Identity: $SQL_SERVER_IDENTITY_ID"
+          
+          # Try to grant the role (will fail if insufficient permissions)
+          if pwsh ./scripts/grant-directory-reader.ps1 \
+            -ServicePrincipalObjectId "$SQL_SERVER_IDENTITY_ID" \
+            -TenantId "$TENANT_ID" 2>/dev/null; then
+            echo "✅ Directory Reader role granted successfully"
+          else
+            echo "⚠️  Failed to grant Directory Reader role automatically"
+            echo "⚠️  A Global Administrator must manually grant this role:"
+            echo ""
+            echo "    Run this command as Global Admin:"
+            echo "    pwsh scripts/grant-directory-reader.ps1 \\"
+            echo "      -ServicePrincipalObjectId \"$SQL_SERVER_IDENTITY_ID\" \\"
+            echo "      -TenantId \"$TENANT_ID\""
+            echo ""
+            echo "    Or use Azure Portal:"
+            echo "    1. Go to Azure Active Directory > Roles and administrators"
+            echo "    2. Select 'Directory Readers'"
+            echo "    3. Add assignment for SQL Server identity: $SQL_SERVER_IDENTITY_ID"
+          fi
+        else
+          echo "⚠️ SQL Server identity not found in outputs."
+        fi
+      working-directory: ./azure
+    
+    - name: Configure Database Access for Managed Identity
+      uses: azure/sql-action@v2.3
+      with:
+        connection-string: 'Server=tcp:${{ steps.tf_outputs.outputs.sql_server_name }}.database.windows.net,1433;Initial Catalog=${{ steps.tf_outputs.outputs.sql_database_name }};Authentication=Active Directory Default;'
+        path: './azure/scripts/add-users-to-db.sql'
+        arguments: '-v ManagedIdentityName="${{ steps.tf_outputs.outputs.managed_identity_name }}"'
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build, infrastructure]
+    if: github.ref == 'refs/heads/main'
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      ARM_USE_OIDC: true
+    
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: webapp
+        path: ./src/ToDoApp/publish
+
+    - name: Azure Login (OIDC)
+      uses: azure/login@v2
+      with:
+        client-id: ${{ vars.AZURE_CLIENT_ID }}
+        tenant-id: ${{ vars.AZURE_TENANT_ID }}
+        subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ needs.infrastructure.outputs.web_app_name }}
+        package: ./src/ToDoApp/publish
