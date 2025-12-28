@@ -2,8 +2,8 @@ terraform {
   required_version = ">= 1.5.0"
 
   backend "azurerm" {
-    resource_group_name  = "daraoladapo-central"  # Update with your Terraform state storage resource group
-    storage_account_name = "docentralsa"  # Update with your Terraform state storage account
+    resource_group_name  = "your-tfstate-rg"          # Update with your Terraform state storage resource group
+    storage_account_name = "yourtfstatesa12345"       # Update with your Terraform state storage account (globally unique)
     container_name       = "terraform"
     key                  = "todoapp.tfstate"
     use_azuread_auth     = true
