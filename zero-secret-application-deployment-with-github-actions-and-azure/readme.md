@@ -1,10 +1,10 @@
 # Zero-Secret Application Deployment with GitHub Actions and Azure
 
-This project demonstrates passwordless deployment of a .NET 8.0 ToDo application to Azure using GitHub Actions OIDC, Managed Identity, and Terraform. No secrets or passwords are stored anywhere.
+This project demonstrates passwordless deployment of a .NET 10.0 ToDo application to Azure using GitHub Actions OIDC, Managed Identity, and Terraform. No secrets or passwords are stored anywhere.
 
 ## Structure
 
-- `src/ToDoApp/`: .NET 8.0 MVC application with Entity Framework Core
+- `src/ToDoApp/`: .NET 10.0 MVC application with Entity Framework Core
 - `azure/`: Terraform modules for infrastructure provisioning
   - `modules/app-service/`: App Service and App Service Plan
   - `modules/sql-server/`: Azure SQL Server and Database with AAD auth
@@ -16,7 +16,7 @@ This project demonstrates passwordless deployment of a .NET 8.0 ToDo application
 
 ## Prerequisites
 
-- .NET 8.0 SDK
+- .NET 10.0 SDK
 - Azure subscription with Contributor access
 - Azure CLI installed and configured
 - Terraform 1.5+ installed
@@ -149,7 +149,7 @@ sql_db_name           = "TodoDatabase"
 sql_sku_name          = "Basic"                       # Basic (~$5/mo), S0, S1, P1
 app_service_plan_name = "my-todo-asp"
 app_service_sku       = "B1"                          # F1 (free), B1 (~$13/mo), S1, P1V2
-dotnet_version        = "8.0"
+dotnet_version        = "10.0"
 app_insights_name     = "my-todo-ai"
 
 tags = {
